@@ -1,0 +1,86 @@
+# Sistema de Venta Concurrente de Boletos (Sistemas Operativos)
+
+Este proyecto demuestra los conceptos de **concurrencia, condición de carrera y exclusión mutua (Mutex)** implementados mediante una arquitectura cliente-servidor en Python y Flask.
+
+---
+
+## 🛠️ Requisitos Previos
+
+Asegúrate de contar con los siguientes elementos instalados en tu sistema:
+
+* **Python 3.10+** (probado y verificado en Python 3.13)
+* **Pip** (administrador de paquetes de Python)
+* **Git** (opcional, para clonar el repositorio)
+* **Base de Datos Oracle** (opcional, si se desea integrar la persistencia externa con el script SQL adjunto)
+
+---
+
+## 📦 Instalación de Dependencias
+
+1. Abre una terminal/consola de comandos y navega hasta la carpeta del proyecto:
+   ```bash
+   cd ruta/a/practica_so
+   ```
+
+2. Instala las librerías necesarias mediante `pip`:
+   ```bash
+   pip install flask reportlab qrcode pillow requests
+   ```
+
+---
+
+## 📂 Estructura del Repositorio
+
+* `servidor.py`: Aplicación Flask que procesa la compra de boletos, gestiona el aforo, la asignación de folios y la generación de PDFs con código QR.
+* `spawner.py`: Script generador de carga que simula la concurrencia lanzando múltiples hilos simultáneos mediante una barrera de sincronización (`threading.Barrier`).
+* `Base de Datos.sql`: Script DDL/DML de Oracle para definir las secuencias y tablas de aforo y bitácora.
+* `README.md`: Guía de instalación y ejecución del proyecto.
+
+---
+
+## 🚀 Guía de Ejecución
+
+El experimento consta de dos fases:
+
+### Fase 1: Prueba de Condición de Carrera (Sin Sincronización)
+
+1. En `servidor.py`, asegúrate de mantener desactivada la sincronización:
+   ```python
+   USAR_SINCRONIZACION = False
+   ```
+2. Inicia el servidor Flask en una primera terminal:
+   ```bash
+   python servidor.py
+   ```
+3. En una segunda terminal, ejecuta el simulador de concurrencia:
+   ```bash
+   python spawner.py
+   ```
+4. **Resultado esperado:** Se detectarán folios duplicados, fallos en la generación de imágenes temporales e incompletitud en el reporte final (p. ej. ~73/100 éxitos).
+
+---
+
+### Fase 2: Prueba de Exclusión Mutua (Con Sincronización)
+
+1. Detén el servidor (`Ctrl + C` en la primera terminal).
+2. En `servidor.py`, habilita el cerrojo Mutex (`threading.Lock`):
+   ```python
+   USAR_SINCRONIZACION = True
+   ```
+3. Vuelve a iniciar el servidor Flask:
+   ```bash
+   python servidor.py
+   ```
+4. Ejecuta de nuevo el *spawner* en la segunda terminal:
+   ```bash
+   python spawner.py
+   ```
+5. **Resultado esperado:** Procesamiento limpio del 100% de las solicitudes (100/100 éxitos) en menos de 60 segundos, con folios estrictamente consecutivos y PDFs con QR generados correctamente en la carpeta de trabajo.
+
+---
+
+## 🗄️ Configuración Opcional de Base de Datos (Oracle)
+
+Si se requiere habilitar el almacenamiento en base de datos:
+1. Ejecuta el script `Base de Datos.sql` dentro de tu instancia de Oracle SQL Developer / SQL*Plus.
+2. Asegúrate de configurar la cadena de conexión correspondiente dentro de `servidor.py`.
